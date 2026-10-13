@@ -78,6 +78,10 @@ func TestReportCommandE2E(t *testing.T) {
 			}
 			args := append([]string{"report", "."}, tt.args...)
 			cmd = exec.Command(goLicensesPath, args...)
+			// Pin the target platform to the one the golden files were
+			// generated for, so the report does not depend on the host
+			// platform.
+			cmd.Env = append(os.Environ(), "GOOS=linux", "GOARCH=amd64")
 			// Capture stderr to buffer.
 			var stderr bytes.Buffer
 			cmd.Stderr = &stderr
