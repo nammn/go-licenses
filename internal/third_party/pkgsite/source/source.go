@@ -55,6 +55,17 @@ type Info struct {
 
 // FileURL returns a URL for a file whose pathname is relative to the module's home directory.
 func (i *Info) FileURL(pathname string) string {
+	return i.fileURL(pathname, i.moduleDir)
+}
+
+// FileURLAtRepoRoot is like FileURL, but resolves pathname relative to the
+// repository root: a version directory of the module (e.g. /v2) is not part of
+// the path.
+func (i *Info) FileURLAtRepoRoot(pathname string) string {
+	return i.fileURL(pathname, removeVersionSuffix(i.moduleDir))
+}
+
+func (i *Info) fileURL(pathname, moduleDir string) string {
 	if i == nil {
 		return ""
 	}
@@ -64,7 +75,7 @@ func (i *Info) FileURL(pathname string) string {
 		"importPath": path.Join(strings.TrimPrefix(i.repoURL, "https://"), dir),
 		"commit":     i.commit,
 		"dir":        dir,
-		"file":       path.Join(i.moduleDir, pathname),
+		"file":       path.Join(moduleDir, pathname),
 		"base":       base,
 	})
 }

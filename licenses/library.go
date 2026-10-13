@@ -399,7 +399,11 @@ func (l *Library) FileURL(ctx context.Context, cl *source.Client, filePath strin
 	}
 	// TODO: there are still rare cases this may result in an incorrect URL.
 	// https://github.com/nammn/go-licenses/issues/73#issuecomment-1005587408
-	return remote.FileURL(relativePath), nil
+	//
+	// The go command copies the repository's root LICENSE into the module zip
+	// when the module directory has none, so resolve the license relative to the
+	// repository root. This also keeps the URL independent of network access.
+	return remote.FileURLAtRepoRoot(relativePath), nil
 }
 
 func (l *Library) Version() string {

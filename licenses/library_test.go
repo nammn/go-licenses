@@ -308,6 +308,22 @@ func TestLibraryFileURL(t *testing.T) {
 			path:    "/go/modcache/k8s.io/api/LICENSE",
 			wantURL: "https://github.com/kubernetes/api/blob/v0.23.1/LICENSE",
 		},
+		{
+			desc: "Module in a version directory whose LICENSE is at the repository root",
+			lib: &Library{
+				Packages: []string{
+					"github.com/evanphx/json-patch/v5",
+				},
+				LicenseFile: "/go/modcache/github.com/evanphx/json-patch/v5@v5.9.11/LICENSE",
+				module: &Module{
+					Path:    "github.com/evanphx/json-patch/v5",
+					Dir:     "/go/modcache/github.com/evanphx/json-patch/v5@v5.9.11",
+					Version: "v5.9.11",
+				},
+			},
+			path:    "/go/modcache/github.com/evanphx/json-patch/v5@v5.9.11/LICENSE",
+			wantURL: "https://github.com/evanphx/json-patch/blob/v5.9.11/LICENSE",
+		},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			client := source.NewClient(time.Second * 20)
