@@ -40,6 +40,7 @@ func TestReportCommandE2E(t *testing.T) {
 		{"testdata/modules/vendored03", nil, "licenses.csv"},
 		{"testdata/modules/replace04", nil, "licenses.csv"},
 		{"testdata/modules/complex", nil, "licenses.csv"},
+		{"testdata/modules/skipurl07", []string{"--skip_url", "--template", "licenses.tpl"}, "licenses.csv"},
 
 		{"testdata/modules/hello01", []string{"--template", "licenses.tpl"}, "licenses.md"},
 		{"testdata/modules/template01", []string{"--template", "licenses.tpl"}, "licenses.md"},
