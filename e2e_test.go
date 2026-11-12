@@ -22,6 +22,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -31,19 +32,22 @@ var update = flag.Bool("update", false, "update golden files")
 
 func TestReportCommandE2E(t *testing.T) {
 	tests := []struct {
-		workdir        string
-		args           []string // additional arguments to pass to report command.
-		goldenFilePath string
+		workdir         string
+		args            []string // additional arguments to pass to report command.
+		goldenFilePath  string
+		checkURLWarning bool
+		wantURLWarning  bool
 	}{
-		{"testdata/modules/hello01", nil, "licenses.csv"},
-		{"testdata/modules/cli02", nil, "licenses.csv"},
-		{"testdata/modules/vendored03", nil, "licenses.csv"},
-		{"testdata/modules/replace04", nil, "licenses.csv"},
-		{"testdata/modules/complex", nil, "licenses.csv"},
-		{"testdata/modules/skipurl07", []string{"--skip_url", "--template", "licenses.tpl"}, "licenses.csv"},
+		{"testdata/modules/hello01", nil, "licenses.csv", false, false},
+		{"testdata/modules/cli02", nil, "licenses.csv", false, false},
+		{"testdata/modules/vendored03", nil, "licenses.csv", false, false},
+		{"testdata/modules/replace04", nil, "licenses.csv", false, false},
+		{"testdata/modules/complex", nil, "licenses.csv", false, false},
+		{"testdata/modules/skipurl07", []string{"--skip_url", "--template", "licenses.tpl"}, "licenses.csv", true, false},
+		{"testdata/modules/skipurl07", []string{"--template", "licenses.tpl"}, "licenses.csv", true, true},
 
-		{"testdata/modules/hello01", []string{"--template", "licenses.tpl"}, "licenses.md"},
-		{"testdata/modules/template01", []string{"--template", "licenses.tpl"}, "licenses.md"},
+		{"testdata/modules/hello01", []string{"--template", "licenses.tpl"}, "licenses.md", false, false},
+		{"testdata/modules/template01", []string{"--template", "licenses.tpl"}, "licenses.md", false, false},
 	}
 
 	originalWorkDir, err := os.Getwd()
@@ -109,6 +113,12 @@ func TestReportCommandE2E(t *testing.T) {
 					"Diff -golden +got:\n%s\n"+
 					"Update the golden by running `go test --update .`",
 					cmp.Diff(golden, got))
+			}
+			if tt.checkURLWarning {
+				gotWarning := strings.Contains(stderr.String(), "Error discovering license URL")
+				if gotWarning != tt.wantURLWarning {
+					t.Errorf("license URL warning = %v, want %v; stderr: %s", gotWarning, tt.wantURLWarning, stderr.String())
+				}
 			}
 		})
 	}

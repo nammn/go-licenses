@@ -70,21 +70,12 @@ type libraryDataFlat struct {
 	LicenseName string
 }
 
-// licenseURLResolver resolves the URL of a license file.
-type licenseURLResolver func(context.Context, string) (string, error)
-
-// resolveLicenseURL returns the license URL unless skip is set or the library
-// has no license file. It is the single decision point for whether the report
-// contacts a module host.
-func resolveLicenseURL(ctx context.Context, licenseFile string, skip bool, resolve licenseURLResolver) (string, error) {
-	if skip || licenseFile == "" {
+// resolveLicenseURL returns UNKNOWN without resolving when skip is set.
+func resolveLicenseURL(skip bool, resolve func() (string, error)) (string, error) {
+	if skip {
 		return UNKNOWN, nil
 	}
-	url, err := resolve(ctx, licenseFile)
-	if err != nil {
-		return UNKNOWN, err
-	}
-	return url, nil
+	return resolve()
 }
 
 // LicenseText reads and returns the contents of LicensePath, if set
@@ -140,8 +131,8 @@ func reportMain(_ *cobra.Command, args []string) error {
 
 		if lib.LicenseFile != "" {
 			group.Go(func() error {
-				url, err := resolveLicenseURL(gctx, lib.LicenseFile, skipURL, func(ctx context.Context, licenseFile string) (string, error) {
-					return lib.FileURL(ctx, client, licenseFile)
+				url, err := resolveLicenseURL(skipURL, func() (string, error) {
+					return lib.FileURL(gctx, client, lib.LicenseFile)
 				})
 				if err == nil {
 					reportData[idx].LicenseURL = url

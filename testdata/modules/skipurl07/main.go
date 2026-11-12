@@ -1,11 +1,5 @@
 package main
 
-import (
-	"fmt"
+import _ "example.invalid/licensed"
 
-	"example.invalid/licensed"
-)
-
-func main() {
-	fmt.Println(licensed.Name())
-}
+func main() {}
