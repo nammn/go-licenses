@@ -44,10 +44,12 @@ var (
 	}
 
 	templateFile string
+	skipURL      bool
 )
 
 func init() {
 	reportCmd.Flags().StringVar(&templateFile, "template", "", "Custom Go template file to use for report")
+	reportCmd.Flags().BoolVar(&skipURL, "skip_url", false, "Skip license URL discovery. The LicenseURL field is left as Unknown.")
 
 	rootCmd.AddCommand(reportCmd)
 }
@@ -66,6 +68,14 @@ type libraryDataFlat struct {
 	LicensePath string
 	LicenseURL  string
 	LicenseName string
+}
+
+// resolveLicenseURL returns UNKNOWN without resolving when skip is set.
+func resolveLicenseURL(skip bool, resolve func() (string, error)) (string, error) {
+	if skip {
+		return UNKNOWN, nil
+	}
+	return resolve()
 }
 
 // LicenseText reads and returns the contents of LicensePath, if set
@@ -121,7 +131,9 @@ func reportMain(_ *cobra.Command, args []string) error {
 
 		if lib.LicenseFile != "" {
 			group.Go(func() error {
-				url, err := lib.FileURL(gctx, client, lib.LicenseFile)
+				url, err := resolveLicenseURL(skipURL, func() (string, error) {
+					return lib.FileURL(gctx, client, lib.LicenseFile)
+				})
 				if err == nil {
 					reportData[idx].LicenseURL = url
 				} else {
